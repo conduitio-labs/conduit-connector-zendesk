@@ -17,10 +17,10 @@ limitations under the License.
 package zendesk
 
 import (
+	"github.com/conduitio-labs/conduit-connector-zendesk/config"
+	"github.com/conduitio-labs/conduit-connector-zendesk/destination"
+	"github.com/conduitio-labs/conduit-connector-zendesk/source"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-zendesk/config"
-	"github.com/conduitio/conduit-connector-zendesk/destination"
-	"github.com/conduitio/conduit-connector-zendesk/source"
 )
 
 func Specification() sdk.Specification {

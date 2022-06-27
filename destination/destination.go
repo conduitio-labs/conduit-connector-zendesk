@@ -20,8 +20,8 @@ import (
 	"context"
 	"sync"
 
+	"github.com/conduitio-labs/conduit-connector-zendesk/zendesk"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-zendesk/zendesk"
 )
 
 type Writer interface {

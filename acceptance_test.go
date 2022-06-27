@@ -27,11 +27,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/conduitio-labs/conduit-connector-zendesk/config"
+	"github.com/conduitio-labs/conduit-connector-zendesk/destination"
+	"github.com/conduitio-labs/conduit-connector-zendesk/source"
+	"github.com/conduitio-labs/conduit-connector-zendesk/zendesk"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-zendesk/config"
-	"github.com/conduitio/conduit-connector-zendesk/destination"
-	"github.com/conduitio/conduit-connector-zendesk/source"
-	"github.com/conduitio/conduit-connector-zendesk/zendesk"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"

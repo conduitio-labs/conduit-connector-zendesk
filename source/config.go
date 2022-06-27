@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/conduitio/conduit-connector-zendesk/config"
+	"github.com/conduitio-labs/conduit-connector-zendesk/config"
 )
 
 const (

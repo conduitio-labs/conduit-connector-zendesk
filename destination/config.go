@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/conduitio/conduit-connector-zendesk/config"
+	"github.com/conduitio-labs/conduit-connector-zendesk/config"
 )
 
 const (
