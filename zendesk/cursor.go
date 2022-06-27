@@ -26,7 +26,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/conduitio/conduit-connector-zendesk/source/position"
+	"github.com/conduitio-labs/conduit-connector-zendesk/source/position"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )

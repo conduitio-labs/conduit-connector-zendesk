@@ -22,9 +22,9 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/conduitio-labs/conduit-connector-zendesk/config"
+	"github.com/conduitio-labs/conduit-connector-zendesk/destination/mocks"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-zendesk/config"
-	"github.com/conduitio/conduit-connector-zendesk/destination/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

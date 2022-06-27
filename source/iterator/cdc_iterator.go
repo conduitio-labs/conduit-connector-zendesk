@@ -22,9 +22,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/conduitio-labs/conduit-connector-zendesk/source/position"
+	"github.com/conduitio-labs/conduit-connector-zendesk/zendesk"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-zendesk/source/position"
-	"github.com/conduitio/conduit-connector-zendesk/zendesk"
 	"gopkg.in/tomb.v2"
 )
 

@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/conduitio/conduit-connector-zendesk/source/iterator"
-	"github.com/conduitio/conduit-connector-zendesk/source/position"
+	"github.com/conduitio-labs/conduit-connector-zendesk/source/iterator"
+	"github.com/conduitio-labs/conduit-connector-zendesk/source/position"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )

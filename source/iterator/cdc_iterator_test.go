@@ -21,9 +21,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/conduitio-labs/conduit-connector-zendesk/source/iterator/mocks"
+	"github.com/conduitio-labs/conduit-connector-zendesk/source/position"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-zendesk/source/iterator/mocks"
-	"github.com/conduitio/conduit-connector-zendesk/source/position"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

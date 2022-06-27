@@ -17,10 +17,10 @@ limitations under the License.
 package main
 
 import (
-	"github.com/conduitio/conduit-connector-zendesk/destination"
-	source "github.com/conduitio/conduit-connector-zendesk/source"
+	"github.com/conduitio-labs/conduit-connector-zendesk/destination"
+	source "github.com/conduitio-labs/conduit-connector-zendesk/source"
 
-	zendesk "github.com/conduitio/conduit-connector-zendesk"
+	zendesk "github.com/conduitio-labs/conduit-connector-zendesk"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
