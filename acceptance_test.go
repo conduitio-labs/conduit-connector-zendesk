@@ -52,20 +52,23 @@ var (
 func TestAcceptance(t *testing.T) {
 	domain = strings.TrimSpace(os.Getenv("CONDUIT_ZENDESK_DOMAIN"))
 	if domain == "" {
-		t.Error("credentials not set in env CONDUIT_ZENDESK_DOMAIN")
-		t.FailNow()
+		t.Skip("CONDUIT_ZENDESK_DOMAIN env var must be set")
+
+		return
 	}
 
 	userName = strings.TrimSpace(os.Getenv("CONDUIT_ZENDESK_USER_NAME"))
 	if userName == "" {
-		t.Error("credentials not set in env CONDUIT_ZENDESK_USER_NAME")
-		t.FailNow()
+		t.Skip("CONDUIT_ZENDESK_USER_NAME env var must be set")
+
+		return
 	}
 
 	apiToken = strings.TrimSpace(os.Getenv("CONDUIT_ZENDESK_API_TOKEN"))
 	if apiToken == "" {
-		t.Error("credentials not set in env CONDUIT_ZENDESK_API_TOKEN")
-		t.FailNow()
+		t.Skip("CONDUIT_ZENDESK_API_TOKEN env var must be set")
+
+		return
 	}
 
 	baseURL = fmt.Sprintf("https://%s.zendesk.com", domain)
@@ -77,10 +80,9 @@ func TestAcceptance(t *testing.T) {
 		source.KeyPollingPeriod: "1s",
 	}
 	destConfig := map[string]string{
-		config.KeyDomain:          domain,
-		config.KeyUserName:        userName,
-		config.KeyAPIToken:        apiToken,
-		destination.KeyBufferSize: "10",
+		config.KeyDomain:   domain,
+		config.KeyUserName: userName,
+		config.KeyAPIToken: apiToken,
 	}
 
 	clearTickets := func(t *testing.T) {
@@ -88,7 +90,7 @@ func TestAcceptance(t *testing.T) {
 	}
 
 	sdk.AcceptanceTest(t, AcceptanceTestDriver{
-		rand: rand.New(rand.NewSource(time.Now().UnixNano())), // nolint: gosec // only used for testing
+		rand: rand.New(rand.NewSource(time.Now().UnixNano())), //nolint:gosec // only used for testing
 		ConfigurableAcceptanceTestDriver: sdk.ConfigurableAcceptanceTestDriver{
 			Config: sdk.ConfigurableAcceptanceTestDriverConfig{
 				Connector: sdk.Connector{
@@ -145,14 +147,13 @@ type AcceptanceTestDriver struct {
 	sdk.ConfigurableAcceptanceTestDriver
 }
 
-func (d AcceptanceTestDriver) GenerateRecord(*testing.T) sdk.Record {
+func (d AcceptanceTestDriver) GenerateRecord(t *testing.T, operation sdk.Operation) sdk.Record {
 	payload := fmt.Sprintf(`{"description":"%s","subject":"%s","raw_subject":"%s"}`, d.randString(32), d.randString(32), d.randString(32))
 	return sdk.Record{
-		Position:  sdk.Position(fmt.Sprintf(`{last_modified_time:%v,id:"%v",}`, time.Now().Add(1*time.Second), 0)),
-		Metadata:  nil,
-		CreatedAt: time.Time{},
-		Key:       sdk.RawData(fmt.Sprintf("%v", 0)),
-		Payload:   sdk.RawData(payload),
+		Position: sdk.Position(fmt.Sprintf(`{last_modified_time:%v,id:"%v",}`, time.Now().Add(1*time.Second), 0)),
+		Metadata: nil,
+		Key:      sdk.RawData(fmt.Sprintf("%v", 0)),
+		Payload:  sdk.Change{After: sdk.RawData(payload)},
 	}
 }
 
@@ -188,7 +189,7 @@ func deleteTickets(t *testing.T) error {
 	// fetching lists of ticket id to delete
 	records, _ := cursor.FetchRecords(context.Background())
 	for _, record := range records {
-		err := json.Unmarshal(record.Payload.Bytes(), &res)
+		err := json.Unmarshal(record.Payload.After.Bytes(), &res)
 		if err != nil {
 			return err
 		}

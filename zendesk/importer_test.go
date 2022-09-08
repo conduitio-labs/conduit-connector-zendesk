@@ -91,7 +91,7 @@ func TestWrite_RawDataPayload(t *testing.T) {
 
 	var inputRecords []sdk.Record
 	inputRecord := sdk.Record{
-		Payload: sdk.RawData(ticketPayload),
+		Payload: sdk.Change{After: sdk.RawData(ticketPayload)},
 	}
 	inputRecords = append(inputRecords, inputRecord)
 
@@ -121,12 +121,14 @@ func TestWrite_StructuredDataPayload(t *testing.T) {
 
 	var inputRecords []sdk.Record
 	inputRecord := sdk.Record{
-		Payload: sdk.StructuredData{
-			"description": "Some dummy description",
-			"priority":    "normal",
-			"subject":     "Sample ticket: Meet the ticket",
-			"tags":        []string{"sample", "support", "zendesk"},
-			"type":        "incident",
+		Payload: sdk.Change{
+			After: sdk.StructuredData{
+				"description": "Some dummy description",
+				"priority":    "normal",
+				"subject":     "Sample ticket: Meet the ticket",
+				"tags":        []string{"sample", "support", "zendesk"},
+				"type":        "incident",
+			},
 		},
 	}
 	inputRecords = append(inputRecords, inputRecord)
@@ -166,7 +168,7 @@ func TestWrite_429(t *testing.T) {
 	"type": "incident"
 }`)
 	inputRecord := sdk.Record{
-		Payload: sdk.RawData(inputBytes),
+		Payload: sdk.Change{After: sdk.RawData(inputBytes)},
 	}
 	inputRecords = append(inputRecords, inputRecord)
 	ctx := context.Background()
@@ -203,7 +205,7 @@ func TestWrite_500(t *testing.T) {
 	"type": "incident"
 }`)
 	inputRecord := sdk.Record{
-		Payload: sdk.RawData(inputBytes),
+		Payload: sdk.Change{After: sdk.RawData(inputBytes)},
 	}
 	inputRecords = append(inputRecords, inputRecord)
 

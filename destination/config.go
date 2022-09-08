@@ -24,53 +24,22 @@ import (
 )
 
 const (
-	// KeyBufferSize is the config name for buffer size.
-	KeyBufferSize = "bufferSize"
-
 	// KeyMaxRetries is the number of times the writer needs to retry, in case of 429 error, before returning an error
 	KeyMaxRetries = "maxRetries"
-
-	// maxBufferSize determines maximum buffer size a config can accept.
-	// value is set to 100, as zendesk bulk import accept max 100 tickets per call
-	// When config with bigger buffer size is parsed, an error is returned.
-	maxBufferSize uint64 = 100
 
 	defaultMaxRetries = "3"
 )
 
 type Config struct {
 	config.Config
-	BufferSize uint64
 	MaxRetries uint64
 }
 
-// Parse validate config and configurable bufferSize
+// Parse parses and validates configuration.
 func Parse(cfg map[string]string) (Config, error) {
 	defaultConfig, err := config.Parse(cfg)
 	if err != nil {
 		return Config{}, err
-	}
-
-	bufferSizeString := cfg[KeyBufferSize]
-	if bufferSizeString == "" {
-		bufferSizeString = fmt.Sprintf("%d", maxBufferSize)
-	}
-
-	bufferSize, err := strconv.ParseUint(bufferSizeString, 10, 64)
-	if err != nil {
-		return Config{}, fmt.Errorf(
-			"%q config value should be a positive integer",
-			KeyBufferSize,
-		)
-	}
-
-	if bufferSize > maxBufferSize {
-		return Config{}, fmt.Errorf(
-			"%q config value should not be bigger than %d, got %d",
-			KeyBufferSize,
-			maxBufferSize,
-			bufferSize,
-		)
 	}
 
 	maxRetriesString := cfg[KeyMaxRetries]
@@ -88,8 +57,8 @@ func Parse(cfg map[string]string) (Config, error) {
 
 	destinationConfig := Config{
 		Config:     defaultConfig,
-		BufferSize: bufferSize,
 		MaxRetries: maxRetries,
 	}
+
 	return destinationConfig, nil
 }

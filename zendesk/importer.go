@@ -118,6 +118,13 @@ func (b *BulkImporter) Write(ctx context.Context, records []sdk.Record) error {
 	return nil
 }
 
+// Close closes any connections which were previously connected from previous requests.
+func (b *BulkImporter) Close() {
+	if b != nil {
+		b.client.CloseIdleConnections()
+	}
+}
+
 // parseRecords unmarshal the payload data from records to map[string]interface{}
 // and returns a marshalled CreateManyRequest, to be used to write multiple tickets to zendesk
 func parseRecords(records []sdk.Record) ([]byte, error) {
@@ -127,7 +134,7 @@ func parseRecords(records []sdk.Record) ([]byte, error) {
 
 	for _, record := range records {
 		var ticket map[string]interface{}
-		err := json.Unmarshal(record.Payload.Bytes(), &ticket)
+		err := json.Unmarshal(record.Payload.After.Bytes(), &ticket)
 		if err != nil {
 			return nil, fmt.Errorf("error unmarshaling the payload into map: %w", err)
 		}

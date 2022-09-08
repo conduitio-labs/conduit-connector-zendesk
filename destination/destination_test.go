@@ -19,7 +19,6 @@ package destination
 import (
 	"context"
 	"errors"
-	"sync"
 	"testing"
 
 	"github.com/conduitio-labs/conduit-connector-zendesk/config"
@@ -88,61 +87,55 @@ func TestOpen(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestWriteAsync(t *testing.T) {
+func TestWrite(t *testing.T) {
 	tests := []struct {
 		name   string
 		record sdk.Record
-		ack    sdk.AckFunc
 		err    error
 		dest   Destination
 	}{
 		{
 			name: "write empty record",
 			dest: Destination{
-				mux: &sync.Mutex{},
-				cfg: Config{
-					BufferSize: 2,
-				},
-				buffer:       make([]sdk.Record, 0),
-				ackFuncCache: make([]sdk.AckFunc, 0),
+				writer: func() Writer {
+					w := &mocks.Writer{}
+					w.On("Write", mock.Anything, mock.Anything).Return(nil)
+
+					return w
+				}(),
 			},
 			record: sdk.Record{
 				Key:     sdk.RawData(`dummy_key`),
-				Payload: sdk.RawData(``),
+				Payload: sdk.Change{After: sdk.RawData(``)},
 			},
 			err: nil,
 		},
 		{
 			name: "valid case",
 			record: sdk.Record{
-				Payload: sdk.RawData(`"dummy_data":"12345"`),
+				Payload: sdk.Change{After: sdk.RawData(`"dummy_data":"12345"`)},
 			},
 			dest: Destination{
-				mux: &sync.Mutex{},
-				cfg: Config{
-					BufferSize: 2,
-				},
-				buffer:       make([]sdk.Record, 0),
-				ackFuncCache: make([]sdk.AckFunc, 0),
+				writer: func() Writer {
+					w := &mocks.Writer{}
+					w.On("Write", mock.Anything, mock.Anything).Return(nil)
+
+					return w
+				}(),
 			},
 		},
 		{
 			name: "write invalid case with flush error",
 			record: sdk.Record{
-				Payload: sdk.RawData(`"dummy_data":"12345"`),
+				Payload: sdk.Change{After: sdk.RawData(`"dummy_data":"12345"`)},
 			},
 			dest: Destination{
-				mux: &sync.Mutex{},
-				cfg: Config{
-					BufferSize: 1,
-				},
 				writer: func() Writer {
 					w := &mocks.Writer{}
 					w.On("Write", mock.Anything, mock.Anything).Return(errors.New("testing error"))
+
 					return w
 				}(),
-				buffer:       make([]sdk.Record, 1),
-				ackFuncCache: make([]sdk.AckFunc, 0),
 			},
 			err: errors.New("testing error"),
 		},
@@ -150,12 +143,14 @@ func TestWriteAsync(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.dest.WriteAsync(context.Background(), tt.record, tt.ack)
+			n, err := tt.dest.Write(context.Background(), []sdk.Record{tt.record})
 			if tt.err != nil {
 				assert.NotNil(t, err)
 				assert.Equal(t, err, tt.err)
+				assert.Equal(t, n, 0)
 			} else {
 				assert.Nil(t, err)
+				assert.Equal(t, n, 1)
 			}
 		})
 	}
@@ -168,49 +163,19 @@ func TestTearDown(t *testing.T) {
 		want error
 	}{
 		{
-			name: "writer invalid case for teardown",
-			dest: Destination{
-				mux: &sync.Mutex{},
-				cfg: Config{
-					BufferSize: 2,
-				},
-				writer: func() Writer {
-					w := &mocks.Writer{}
-					w.On("Write", mock.Anything, mock.Anything).Return(errors.New("testing error"))
-					return w
-				}(),
-				buffer:       make([]sdk.Record, 0),
-				ackFuncCache: make([]sdk.AckFunc, 0),
-			},
-			want: errors.New("testing error"),
-		},
-		{
 			name: "writer valid case for teardown",
 			dest: Destination{
-				mux: &sync.Mutex{},
-				cfg: Config{
-					BufferSize: 2,
-				},
 				writer: func() Writer {
 					w := &mocks.Writer{}
-					w.On("Write", mock.Anything, mock.Anything).Return(nil)
+					w.On("Close")
+
 					return w
 				}(),
-				buffer:       make([]sdk.Record, 0),
-				ackFuncCache: make([]sdk.AckFunc, 0),
-				err:          nil,
 			},
 		},
 		{
 			name: "nil writer case",
-			dest: Destination{
-				mux: &sync.Mutex{},
-				cfg: Config{
-					BufferSize: 2,
-				},
-				buffer:       make([]sdk.Record, 0),
-				ackFuncCache: make([]sdk.AckFunc, 0),
-			},
+			dest: Destination{},
 			want: nil,
 		},
 	}
@@ -218,60 +183,6 @@ func TestTearDown(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.dest.Teardown(context.Background())
-			if tt.want != nil {
-				assert.NotNil(t, err)
-				return
-			}
-			assert.Nil(t, err)
-		})
-	}
-}
-
-func TestFlush(t *testing.T) {
-	tests := []struct {
-		name string
-		dest Destination
-		want error
-	}{
-		{
-			name: "invalid case",
-			dest: Destination{
-				mux: &sync.Mutex{},
-				cfg: Config{
-					BufferSize: 2,
-				},
-				writer: func() Writer {
-					w := &mocks.Writer{}
-					w.On("Write", mock.Anything, mock.Anything).Return(errors.New("testing error"))
-					return w
-				}(),
-				buffer:       make([]sdk.Record, 0),
-				ackFuncCache: make([]sdk.AckFunc, 0),
-			},
-			want: errors.New("testing error"),
-		},
-		{
-			name: "valid case",
-			dest: Destination{
-				mux: &sync.Mutex{},
-				cfg: Config{
-					BufferSize: 2,
-				},
-				writer: func() Writer {
-					w := &mocks.Writer{}
-					w.On("Write", mock.Anything, mock.Anything).Return(nil)
-					return w
-				}(),
-				buffer:       make([]sdk.Record, 0),
-				ackFuncCache: make([]sdk.AckFunc, 0),
-				err:          nil,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.dest.Flush(context.Background())
 			if tt.want != nil {
 				assert.NotNil(t, err)
 				return

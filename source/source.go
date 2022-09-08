@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/conduitio-labs/conduit-connector-zendesk/config"
 	"github.com/conduitio-labs/conduit-connector-zendesk/source/iterator"
 	"github.com/conduitio-labs/conduit-connector-zendesk/source/position"
 
@@ -38,8 +39,35 @@ type Iterator interface {
 	Stop()
 }
 
+// NewSource initialises a new source.
 func NewSource() sdk.Source {
-	return &Source{}
+	return sdk.SourceWithMiddleware(&Source{}, sdk.DefaultSourceMiddleware()...)
+}
+
+// Parameters returns a map of named Parameters that describe how to configure the Source.
+func (s *Source) Parameters() map[string]sdk.Parameter {
+	return map[string]sdk.Parameter{
+		config.KeyDomain: {
+			Default:     "",
+			Required:    true,
+			Description: "A domain is referred as the organization name to which zendesk is registered",
+		},
+		config.KeyUserName: {
+			Default:     "",
+			Required:    true,
+			Description: "Login to zendesk performed using username",
+		},
+		config.KeyAPIToken: {
+			Default:     "",
+			Required:    true,
+			Description: "password to login",
+		},
+		KeyPollingPeriod: {
+			Default:     "6s",
+			Required:    false,
+			Description: "Fetch interval for consecutive iterations",
+		},
+	}
 }
 
 // Configure parses zendesk config

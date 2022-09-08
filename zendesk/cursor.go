@@ -117,6 +117,13 @@ func (c *Cursor) FetchRecords(ctx context.Context) ([]sdk.Record, error) {
 	return c.toRecords(res.TicketList)
 }
 
+// Close closes any connections which were previously connected from previous requests.
+func (c *Cursor) Close() {
+	if c != nil {
+		c.client.CloseIdleConnections()
+	}
+}
+
 // convert received ticket list to sdk.Record
 func (c *Cursor) toRecords(tickets []map[string]interface{}) ([]sdk.Record, error) {
 	records := make([]sdk.Record, 0, len(tickets))
@@ -159,13 +166,15 @@ func (c *Cursor) toRecords(tickets []map[string]interface{}) ([]sdk.Record, erro
 			return nil, err
 		}
 
-		records = append(records, sdk.Record{
-			Position:  toRecordPosition,
-			Metadata:  nil,
-			CreatedAt: createdAt,
-			Key:       sdk.RawData(fmt.Sprintf("%v", id)),
-			Payload:   sdk.RawData(payload),
-		})
+		metadata := sdk.Metadata{}
+		metadata.SetCreatedAt(createdAt)
+
+		records = append(records, sdk.Util.Source.NewRecordSnapshot(
+			toRecordPosition,
+			metadata,
+			sdk.RawData(fmt.Sprintf("%v", id)),
+			sdk.RawData(payload),
+		))
 	}
 	return records, nil
 }

@@ -3,14 +3,14 @@ module github.com/conduitio-labs/conduit-connector-zendesk
 go 1.18
 
 require (
-	github.com/conduitio/conduit-connector-sdk v0.2.1-0.20220530152250-733149cddc0b
+	github.com/conduitio/conduit-connector-sdk v0.2.1-0.20220830103153-f1e73bed9120
 	github.com/stretchr/testify v1.7.5
 	go.uber.org/goleak v1.1.12
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637
 )
 
 require (
-	github.com/conduitio/conduit-connector-protocol v0.2.0 // indirect
+	github.com/conduitio/conduit-connector-protocol v0.2.1-0.20220802135043-4b89a6c94401 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -24,12 +24,13 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rs/zerolog v1.26.1 // indirect
+	github.com/rs/zerolog v1.28.0 // indirect
 	github.com/stretchr/objx v0.4.0 // indirect
-	go.buf.build/library/go-grpc/conduitio/conduit-connector-protocol v1.4.1 // indirect
+	go.buf.build/grpc/go/conduitio/conduit-connector-protocol v1.3.3 // indirect
 	golang.org/x/net v0.0.0-20220607020251-c690dde0001d // indirect
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
 	google.golang.org/genproto v0.0.0-20220602131408-e326c6e8e9c8 // indirect
 	google.golang.org/grpc v1.47.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect

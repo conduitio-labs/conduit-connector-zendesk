@@ -15,6 +15,11 @@ type ZendeskCursor struct {
 	mock.Mock
 }
 
+// Close provides a mock function with given fields:
+func (_m *ZendeskCursor) Close() {
+	_m.Called()
+}
+
 // FetchRecords provides a mock function with given fields: ctx
 func (_m *ZendeskCursor) FetchRecords(ctx context.Context) ([]sdk.Record, error) {
 	ret := _m.Called(ctx)

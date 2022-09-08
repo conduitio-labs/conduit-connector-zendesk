@@ -89,6 +89,7 @@ func TestFlush(t *testing.T) {
 
 	mockCursor := new(mocks.ZendeskCursor)
 	mockCursor.On("FetchRecords", mock.Anything).Once().Return([]sdk.Record{in}, nil)
+	mockCursor.On("Close")
 
 	cdc := newTestCDCIterator(ctx, t, 500*time.Millisecond, mockCursor) // half of timeout time
 
@@ -153,6 +154,7 @@ func TestHasNext(t *testing.T) {
 	}, {
 		name: "record in buffer, iterator stopped",
 		fn: func(t *testing.T, c *CDCIterator, mc *mocks.ZendeskCursor) {
+			mc.On("Close")
 			// directly set record in buffer, to mock this scenario
 			c.buffer <- sdk.Record{}
 			c.Stop()

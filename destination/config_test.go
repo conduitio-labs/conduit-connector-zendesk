@@ -16,7 +16,6 @@ limitations under the License.
 package destination
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/conduitio-labs/conduit-connector-zendesk/config"
@@ -32,16 +31,14 @@ func TestParse_Destination(t *testing.T) {
 		err     error
 	}{
 		{
-			name: "Login with configured buffer size",
+			name: "valid configuration",
 			config: map[string]string{
-				KeyBufferSize:      "10",
 				config.KeyDomain:   "testlab",
 				config.KeyUserName: "test@testlab.com",
 				config.KeyAPIToken: "gkdsaj)({jgo43646435#$!ga",
 				KeyMaxRetries:      "5",
 			},
 			want: Config{
-				BufferSize: 10,
 				MaxRetries: 5,
 				Config: config.Config{
 					Domain:   "testlab",
@@ -53,34 +50,13 @@ func TestParse_Destination(t *testing.T) {
 			err:     nil,
 		},
 		{
-			name: "Login without buffer size value",
-			config: map[string]string{
-				KeyBufferSize:      "",
-				config.KeyDomain:   "testlab",
-				config.KeyUserName: "test@testlab.com",
-				config.KeyAPIToken: "gkdsaj)({jgo43646435#$!ga",
-				KeyMaxRetries:      "0",
-			},
-			want: Config{
-				BufferSize: 100,
-				Config: config.Config{
-					Domain:   "testlab",
-					UserName: "test@testlab.com",
-					APIToken: "gkdsaj)({jgo43646435#$!ga",
-				},
-			},
-			isError: false,
-			err:     nil,
-		},
-		{
-			name: "Login without buffer size",
+			name: "Login without max retries",
 			config: map[string]string{
 				config.KeyDomain:   "testlab",
 				config.KeyUserName: "test@testlab.com",
 				config.KeyAPIToken: "gkdsaj)({jgo43646435#$!ga",
 			},
 			want: Config{
-				BufferSize: 100,
 				MaxRetries: 3,
 				Config: config.Config{
 					Domain:   "testlab",
@@ -90,46 +66,6 @@ func TestParse_Destination(t *testing.T) {
 			},
 			isError: false,
 			err:     nil,
-		},
-		{
-			name: "Login with bufferSize greater than maxBufferSize",
-			config: map[string]string{
-				config.KeyDomain:   "testlab",
-				config.KeyUserName: "test@testlab.com",
-				config.KeyAPIToken: "gkdsaj)({jgo43646435#$!ga",
-				KeyBufferSize:      "200",
-			},
-			want: Config{
-				BufferSize: 100,
-				MaxRetries: 3,
-				Config: config.Config{
-					Domain:   "testlab",
-					UserName: "test@testlab.com",
-					APIToken: "gkdsaj)({jgo43646435#$!ga",
-				},
-			},
-			isError: true,
-			err:     fmt.Errorf("\"bufferSize\" config value should not be bigger than 100, got 200"),
-		},
-		{
-			name: "Login with negative bufferSize",
-			config: map[string]string{
-				config.KeyDomain:   "testlab",
-				config.KeyUserName: "test@testlab.com",
-				config.KeyAPIToken: "gkdsaj)({jgo43646435#$!ga",
-				KeyBufferSize:      "-100",
-			},
-			want: Config{
-				BufferSize: 100,
-				MaxRetries: 3,
-				Config: config.Config{
-					Domain:   "testlab",
-					UserName: "test@testlab.com",
-					APIToken: "gkdsaj)({jgo43646435#$!ga",
-				},
-			},
-			isError: true,
-			err:     fmt.Errorf("\"bufferSize\" config value should be a positive integer"),
 		},
 	}
 	for _, tt := range tests {

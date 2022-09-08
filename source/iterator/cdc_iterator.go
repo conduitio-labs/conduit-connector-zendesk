@@ -30,6 +30,7 @@ import (
 
 type ZendeskCursor interface {
 	FetchRecords(ctx context.Context) ([]sdk.Record, error)
+	Close()
 }
 
 //go:generate mockery --name=ZendeskCursor
@@ -148,6 +149,7 @@ func (c *CDCIterator) flush() error {
 }
 
 func (c *CDCIterator) Stop() {
+	c.cursor.Close()
 	c.ticker.Stop()
 	c.tomb.Kill(errors.New("iterator stopped"))
 }
