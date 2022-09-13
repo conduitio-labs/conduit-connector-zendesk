@@ -27,6 +27,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/conduitio-labs/conduit-connector-zendesk/source/position"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,11 +42,14 @@ func TestCursor_FetchRecords(t *testing.T) {
 	}
 	testServer := httptest.NewServer(th)
 	cursor := &Cursor{
-		userName:         th.username,
-		apiToken:         th.apiToken,
-		client:           &http.Client{},
-		baseURL:          testServer.URL,
-		lastModifiedTime: time.Unix(0, 0),
+		userName: th.username,
+		apiToken: th.apiToken,
+		client:   &http.Client{},
+		baseURL:  testServer.URL,
+		tp: &position.TicketPosition{
+			Mode:         position.ModeSnapshot,
+			LastModified: time.Unix(0, 0),
+		},
 	}
 	ctx := context.Background()
 	recs, err := cursor.FetchRecords(ctx)
@@ -77,12 +81,15 @@ func TestCursor_FetchRecords_429(t *testing.T) {
 	}
 	testServer := httptest.NewServer(th)
 	cursor := &Cursor{
-		userName:         th.username,
-		apiToken:         th.apiToken,
-		client:           &http.Client{},
-		baseURL:          testServer.URL,
-		lastModifiedTime: time.Unix(0, 0),
-		afterURL:         fmt.Sprintf("%s/api/v2/incremental/tickets/cursor.json?cursor=some_dummy", testServer.URL),
+		userName: th.username,
+		apiToken: th.apiToken,
+		client:   &http.Client{},
+		baseURL:  testServer.URL,
+		tp: &position.TicketPosition{
+			Mode:         position.ModeSnapshot,
+			LastModified: time.Unix(0, 0),
+		},
+		afterURL: fmt.Sprintf("%s/api/v2/incremental/tickets/cursor.json?cursor=some_dummy", testServer.URL),
 	}
 	ctx := context.Background()
 	recs, err := cursor.FetchRecords(ctx)
@@ -102,12 +109,15 @@ func TestCursor_FetchRecords_500(t *testing.T) {
 	}
 	testServer := httptest.NewServer(th)
 	cursor := &Cursor{
-		userName:         th.username,
-		apiToken:         th.apiToken,
-		client:           &http.Client{},
-		baseURL:          testServer.URL,
-		lastModifiedTime: time.Unix(0, 0),
-		afterURL:         fmt.Sprintf("%s/api/v2/incremental/tickets/cursor.json?cursor=some_dummy", testServer.URL),
+		userName: th.username,
+		apiToken: th.apiToken,
+		client:   &http.Client{},
+		baseURL:  testServer.URL,
+		tp: &position.TicketPosition{
+			Mode:         position.ModeSnapshot,
+			LastModified: time.Unix(0, 0),
+		},
+		afterURL: fmt.Sprintf("%s/api/v2/incremental/tickets/cursor.json?cursor=some_dummy", testServer.URL),
 	}
 	ctx := context.Background()
 	recs, err := cursor.FetchRecords(ctx)

@@ -31,6 +31,7 @@ import (
 	"github.com/conduitio-labs/conduit-connector-zendesk/config"
 	"github.com/conduitio-labs/conduit-connector-zendesk/destination"
 	"github.com/conduitio-labs/conduit-connector-zendesk/source"
+	"github.com/conduitio-labs/conduit-connector-zendesk/source/position"
 	"github.com/conduitio-labs/conduit-connector-zendesk/zendesk"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 
@@ -184,7 +185,10 @@ func (d AcceptanceTestDriver) randString(n int) string {
 
 func deleteTickets(t *testing.T) error {
 	var res ticket
-	cursor := zendesk.NewCursor(userName, apiToken, domain, time.Unix(0, 0))
+	cursor := zendesk.NewCursor(userName, apiToken, domain, &position.TicketPosition{
+		Mode:         position.ModeSnapshot,
+		LastModified: time.Unix(0, 0),
+	})
 	ticketIDs := make([]string, 0)
 
 	// fetching lists of ticket id to delete

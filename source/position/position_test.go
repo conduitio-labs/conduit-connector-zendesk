@@ -39,25 +39,21 @@ func TestParsePosition(t *testing.T) {
 	tests := []struct {
 		name    string
 		pos     sdk.Position
-		want    TicketPosition
+		want    *TicketPosition
 		isError bool
 	}{
 		{
 			name: "Ticket position for valid case",
 			pos:  []byte(`{"LastModified":"2022-05-08T02:48:21Z","ID":87}`),
-		},
-		{
-			want: TicketPosition{
+			want: &TicketPosition{
 				ID: 87,
 			},
 			isError: false,
 		},
 		{
-			name: "Ticket position for not valid case",
-			pos:  []byte{},
-		},
-		{
-			want:    TicketPosition{},
+			name:    "Ticket position for not valid case",
+			pos:     []byte{},
+			want:    nil,
 			isError: false,
 		},
 	}
@@ -66,9 +62,8 @@ func TestParsePosition(t *testing.T) {
 			res, err := ParsePosition(tt.pos)
 			if tt.isError {
 				assert.NotNil(t, err)
-			} else {
-				assert.NotNil(t, res)
 			}
+			assert.Equal(t, tt.want, res)
 		})
 	}
 }

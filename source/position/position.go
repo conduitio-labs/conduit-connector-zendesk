@@ -24,7 +24,17 @@ import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
+// Mode defines an iterator mode.
+type Mode string
+
+const (
+	ModeSnapshot = "snapshot"
+	ModeCDC      = "cdc"
+)
+
 type TicketPosition struct {
+	// Mode represents current iterator mode.
+	Mode         Mode      `json:"mode"`
 	LastModified time.Time `json:"last_modified_time"`
 	ID           float64   `json:"id"` // two tickets can have the same update time, id is to keep the position unique across tickets
 }
@@ -40,19 +50,19 @@ func (pos *TicketPosition) ToRecordPosition() (sdk.Position, error) {
 }
 
 // ParsePosition will unmarshal the TicketPosition used to record the next position
-func ParsePosition(p sdk.Position) (TicketPosition, error) {
+func ParsePosition(p sdk.Position) (*TicketPosition, error) {
 	var err error
 
-	if len(p) == 0 {
-		return TicketPosition{}, nil
+	if p == nil {
+		return nil, nil
 	}
 
 	var tp TicketPosition
 	// parse the next position to sdk.Record
 	err = json.Unmarshal(p, &tp)
 	if err != nil {
-		return TicketPosition{}, fmt.Errorf("couldn't parse the after_cursor position: %w", err)
+		return nil, fmt.Errorf("couldn't parse the after_cursor position: %w", err)
 	}
 
-	return tp, err
+	return &tp, err
 }

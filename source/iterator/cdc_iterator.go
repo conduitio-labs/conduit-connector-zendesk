@@ -50,16 +50,19 @@ func NewCDCIterator(
 	ctx context.Context,
 	username, apiToken, domain string, // config params
 	pollingPeriod time.Duration,
-	tp position.TicketPosition,
+	tp *position.TicketPosition,
 	cursors ...ZendeskCursor,
 ) (*CDCIterator, error) {
 	tmbWithCtx, _ := tomb.WithContext(ctx)
-	lastModified := tp.LastModified
-	if lastModified.IsZero() {
-		lastModified = time.Unix(0, 0)
+
+	if tp == nil || tp.LastModified.IsZero() {
+		tp = &position.TicketPosition{
+			Mode:         position.ModeSnapshot,
+			LastModified: time.Unix(0, 0),
+		}
 	}
 
-	var cursor ZendeskCursor = zendesk.NewCursor(username, apiToken, domain, lastModified)
+	var cursor ZendeskCursor = zendesk.NewCursor(username, apiToken, domain, tp)
 	if len(cursors) > 0 {
 		cursor = cursors[0]
 	}
@@ -69,7 +72,7 @@ func NewCDCIterator(
 		caches:           make(chan []sdk.Record, 1),
 		buffer:           make(chan sdk.Record, 1),
 		ticker:           time.NewTicker(pollingPeriod),
-		lastModifiedTime: lastModified,
+		lastModifiedTime: tp.LastModified,
 		cursor:           cursor,
 		mux:              &sync.Mutex{},
 	}

@@ -60,7 +60,7 @@ func TestNewCDCIterator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res, err := NewCDCIterator(context.Background(), tt.username, tt.apiToken, tt.domain, tt.pollingPeriod, tt.tp)
+			res, err := NewCDCIterator(context.Background(), tt.username, tt.apiToken, tt.domain, tt.pollingPeriod, &tt.tp)
 			if tt.isError {
 				assert.NotNil(t, err)
 			} else {
@@ -193,7 +193,7 @@ func TestStreamIterator_Stop(t *testing.T) {
 
 func newTestCDCIterator(ctx context.Context, t *testing.T, pollingPeriod time.Duration, cursors ...ZendeskCursor) *CDCIterator {
 	t.Helper()
-	cdc, err := NewCDCIterator(ctx, "", "", "", pollingPeriod, position.TicketPosition{}, cursors...)
+	cdc, err := NewCDCIterator(ctx, "", "", "", pollingPeriod, nil, cursors...)
 	assert.NoError(t, err)
 	return cdc
 }
