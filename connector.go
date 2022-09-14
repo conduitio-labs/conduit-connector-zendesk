@@ -15,15 +15,15 @@
 package zendesk
 
 import (
+	"github.com/conduitio-labs/conduit-connector-zendesk/destination"
+	"github.com/conduitio-labs/conduit-connector-zendesk/source"
+
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
-func Specification() sdk.Specification {
-	return sdk.Specification{
-		Name:        "zendesk",
-		Summary:     "Zendesk conduit plugin",
-		Description: "A zendesk source and destination plugin for Conduit",
-		Version:     "v0.1.0",
-		Author:      "Gophers Lab Technologies Pvt Ltd",
-	}
+// Connector represents a sdk.Connector of Zendesk.
+var Connector = sdk.Connector{
+	NewSpecification: Specification,
+	NewSource:        source.NewSource,
+	NewDestination:   destination.NewDestination,
 }

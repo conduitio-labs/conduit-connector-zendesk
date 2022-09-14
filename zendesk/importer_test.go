@@ -1,18 +1,17 @@
-/*
-Copyright © 2022 Meroxa, Inc. & Gophers Lab Technologies Pvt. Ltd.
+// Copyright © 2022 Meroxa, Inc. & Gophers Lab Technologies Pvt. Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package zendesk
 
 import (
@@ -91,7 +90,7 @@ func TestWrite_RawDataPayload(t *testing.T) {
 
 	var inputRecords []sdk.Record
 	inputRecord := sdk.Record{
-		Payload: sdk.RawData(ticketPayload),
+		Payload: sdk.Change{After: sdk.RawData(ticketPayload)},
 	}
 	inputRecords = append(inputRecords, inputRecord)
 
@@ -121,12 +120,14 @@ func TestWrite_StructuredDataPayload(t *testing.T) {
 
 	var inputRecords []sdk.Record
 	inputRecord := sdk.Record{
-		Payload: sdk.StructuredData{
-			"description": "Some dummy description",
-			"priority":    "normal",
-			"subject":     "Sample ticket: Meet the ticket",
-			"tags":        []string{"sample", "support", "zendesk"},
-			"type":        "incident",
+		Payload: sdk.Change{
+			After: sdk.StructuredData{
+				"description": "Some dummy description",
+				"priority":    "normal",
+				"subject":     "Sample ticket: Meet the ticket",
+				"tags":        []string{"sample", "support", "zendesk"},
+				"type":        "incident",
+			},
 		},
 	}
 	inputRecords = append(inputRecords, inputRecord)
@@ -166,7 +167,7 @@ func TestWrite_429(t *testing.T) {
 	"type": "incident"
 }`)
 	inputRecord := sdk.Record{
-		Payload: sdk.RawData(inputBytes),
+		Payload: sdk.Change{After: sdk.RawData(inputBytes)},
 	}
 	inputRecords = append(inputRecords, inputRecord)
 	ctx := context.Background()
@@ -203,7 +204,7 @@ func TestWrite_500(t *testing.T) {
 	"type": "incident"
 }`)
 	inputRecord := sdk.Record{
-		Payload: sdk.RawData(inputBytes),
+		Payload: sdk.Change{After: sdk.RawData(inputBytes)},
 	}
 	inputRecords = append(inputRecords, inputRecord)
 

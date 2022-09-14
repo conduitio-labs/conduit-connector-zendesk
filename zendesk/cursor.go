@@ -1,18 +1,16 @@
-/*
-Copyright © 2022 Meroxa, Inc. & Gophers Lab Technologies Pvt. Ltd.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright © 2022 Meroxa, Inc. & Gophers Lab Technologies Pvt. Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package zendesk
 
@@ -32,13 +30,13 @@ import (
 )
 
 type Cursor struct {
-	client           *http.Client // new http client
-	userName         string       // zendesk username
-	apiToken         string       // zendesk apiToken
-	afterURL         string       // index url for next fetch of tickets
-	nextRun          time.Time    // configurable polling period to hit zendesk api
-	lastModifiedTime time.Time    // ticket last updated time
-	baseURL          string       // zendesk api url
+	client   *http.Client // new http client
+	userName string       // zendesk username
+	apiToken string       // zendesk apiToken
+	afterURL string       // index url for next fetch of tickets
+	nextRun  time.Time    // configurable polling period to hit zendesk api
+	tp       *position.TicketPosition
+	baseURL  string // zendesk api url
 }
 
 type response struct {
@@ -47,13 +45,13 @@ type response struct {
 	TicketList  []map[string]interface{} `json:"tickets"`       // stores list of tickets
 }
 
-func NewCursor(userName, apiToken, domain string, startTime time.Time) *Cursor {
+func NewCursor(userName, apiToken, domain string, tp *position.TicketPosition) *Cursor {
 	return &Cursor{
-		client:           newHTTPClient(),
-		userName:         userName,
-		apiToken:         apiToken,
-		baseURL:          fmt.Sprintf("https://%s.zendesk.com", domain),
-		lastModifiedTime: startTime,
+		client:   newHTTPClient(),
+		userName: userName,
+		apiToken: apiToken,
+		baseURL:  fmt.Sprintf("https://%s.zendesk.com", domain),
+		tp:       tp,
 	}
 }
 
@@ -63,7 +61,7 @@ func (c *Cursor) FetchRecords(ctx context.Context) ([]sdk.Record, error) {
 		return nil, nil
 	}
 
-	url := fmt.Sprintf("%s/api/v2/incremental/tickets/cursor.json?start_time=%d", c.baseURL, c.lastModifiedTime.Add(time.Second).Unix()) // add one extra second, to get newer updates only
+	url := fmt.Sprintf("%s/api/v2/incremental/tickets/cursor.json?start_time=%d", c.baseURL, c.tp.LastModified.Add(time.Second).Unix()) // add one extra second, to get newer updates only
 
 	// if after URL is available, use that
 	if c.afterURL != "" {
@@ -114,14 +112,35 @@ func (c *Cursor) FetchRecords(ctx context.Context) ([]sdk.Record, error) {
 		c.afterURL = *res.AfterURL
 	}
 
-	return c.toRecords(res.TicketList)
+	records, err := c.toRecords(res.TicketList)
+	if err != nil {
+		return nil, fmt.Errorf("convert tickets to records: %w", err)
+	}
+
+	if res.EndOfStream {
+		c.tp.Mode = position.ModeCDC
+	}
+
+	return records, err
+}
+
+// Close closes any connections which were previously connected from previous requests.
+func (c *Cursor) Close() {
+	if c != nil {
+		c.client.CloseIdleConnections()
+	}
 }
 
 // convert received ticket list to sdk.Record
 func (c *Cursor) toRecords(tickets []map[string]interface{}) ([]sdk.Record, error) {
 	records := make([]sdk.Record, 0, len(tickets))
-	lastValidModifiedTime := c.lastModifiedTime
+	lastValidModifiedTime := c.tp.LastModified
+
 	for _, ticket := range tickets {
+		if c.tp.Mode == position.ModeSnapshot && ticket["status"] == "deleted" {
+			continue
+		}
+
 		payload, err := json.Marshal(ticket)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling the payload: %w", err)
@@ -154,19 +173,53 @@ func (c *Cursor) toRecords(tickets []map[string]interface{}) ([]sdk.Record, erro
 			lastValidModifiedTime = updatedAt
 		}
 
-		toRecordPosition, err := (&position.TicketPosition{LastModified: updatedAt, ID: id}).ToRecordPosition()
+		c.tp.ID = id
+		c.tp.LastModified = updatedAt
+
+		toRecordPosition, err := c.tp.ToRecordPosition()
 		if err != nil {
 			return nil, err
 		}
 
-		records = append(records, sdk.Record{
-			Position:  toRecordPosition,
-			Metadata:  nil,
-			CreatedAt: createdAt,
-			Key:       sdk.RawData(fmt.Sprintf("%v", id)),
-			Payload:   sdk.RawData(payload),
-		})
+		metadata := sdk.Metadata{}
+		metadata.SetCreatedAt(createdAt)
+
+		if c.tp.Mode == position.ModeSnapshot {
+			records = append(records, sdk.Util.Source.NewRecordSnapshot(
+				toRecordPosition,
+				metadata,
+				sdk.RawData(fmt.Sprintf("%v", id)),
+				sdk.RawData(payload),
+			))
+
+			continue
+		}
+
+		switch ticket["status"] {
+		case "new":
+			records = append(records, sdk.Util.Source.NewRecordCreate(
+				toRecordPosition,
+				metadata,
+				sdk.RawData(fmt.Sprintf("%v", id)),
+				sdk.RawData(payload),
+			))
+		case "deleted":
+			records = append(records, sdk.Util.Source.NewRecordDelete(
+				toRecordPosition,
+				metadata,
+				sdk.RawData(fmt.Sprintf("%v", id)),
+			))
+		default:
+			records = append(records, sdk.Util.Source.NewRecordUpdate(
+				toRecordPosition,
+				metadata,
+				sdk.RawData(fmt.Sprintf("%v", id)),
+				nil,
+				sdk.RawData(payload),
+			))
+		}
 	}
+
 	return records, nil
 }
 

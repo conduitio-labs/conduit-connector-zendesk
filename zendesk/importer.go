@@ -1,18 +1,16 @@
-/*
-Copyright © 2022 Meroxa, Inc. & Gophers Lab Technologies Pvt. Ltd.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright © 2022 Meroxa, Inc. & Gophers Lab Technologies Pvt. Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package zendesk
 
@@ -118,6 +116,13 @@ func (b *BulkImporter) Write(ctx context.Context, records []sdk.Record) error {
 	return nil
 }
 
+// Close closes any connections which were previously connected from previous requests.
+func (b *BulkImporter) Close() {
+	if b != nil {
+		b.client.CloseIdleConnections()
+	}
+}
+
 // parseRecords unmarshal the payload data from records to map[string]interface{}
 // and returns a marshalled CreateManyRequest, to be used to write multiple tickets to zendesk
 func parseRecords(records []sdk.Record) ([]byte, error) {
@@ -127,7 +132,7 @@ func parseRecords(records []sdk.Record) ([]byte, error) {
 
 	for _, record := range records {
 		var ticket map[string]interface{}
-		err := json.Unmarshal(record.Payload.Bytes(), &ticket)
+		err := json.Unmarshal(record.Payload.After.Bytes(), &ticket)
 		if err != nil {
 			return nil, fmt.Errorf("error unmarshaling the payload into map: %w", err)
 		}

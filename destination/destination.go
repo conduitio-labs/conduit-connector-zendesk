@@ -1,123 +1,105 @@
-/*
-Copyright © 2022 Meroxa, Inc. & Gophers Lab Technologies Pvt. Ltd.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright © 2022 Meroxa, Inc. & Gophers Lab Technologies Pvt. Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package destination
 
 import (
 	"context"
-	"sync"
 
+	"github.com/conduitio-labs/conduit-connector-zendesk/config"
 	"github.com/conduitio-labs/conduit-connector-zendesk/zendesk"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
 type Writer interface {
 	Write(ctx context.Context, records []sdk.Record) error
+	Close()
 }
+
+//go:generate mockery --name=Writer
 
 type Destination struct {
 	sdk.UnimplementedDestination
-	cfg          Config        // destination specific config for zendesk
-	buffer       []sdk.Record  // buffer stores the list of zendesk ticket from conduit server
-	ackFuncCache []sdk.AckFunc // returns error to conduit if fails else return nil
-	err          error         // to capture the last write error
-	mux          *sync.Mutex   // maintains state of the pipeline
-	writer       Writer        // interface that implements to write tickets to zendesk
+	cfg    Config // destination specific config for zendesk
+	writer Writer // interface that implements to write tickets to zendesk
 }
 
+// NewDestination initialises a new Destination.
 func NewDestination() sdk.Destination {
-	return &Destination{
-		mux: &sync.Mutex{},
+	return sdk.DestinationWithMiddleware(&Destination{}, sdk.DefaultDestinationMiddleware()...)
+}
+
+// Parameters returns a map of named Parameters that describe how to configure the Source.
+func (d *Destination) Parameters() map[string]sdk.Parameter {
+	return map[string]sdk.Parameter{
+		config.KeyDomain: {
+			Default:     "",
+			Required:    true,
+			Description: "A domain is referred as the organization name to which zendesk is registered",
+		},
+		config.KeyUserName: {
+			Default:     "",
+			Required:    true,
+			Description: "Login to zendesk performed using username",
+		},
+		config.KeyAPIToken: {
+			Default:     "",
+			Required:    true,
+			Description: "password to login",
+		},
+		KeyMaxRetries: {
+			Default:     "3",
+			Required:    false,
+			Description: "max API retries, before returning an error",
+		},
 	}
 }
 
 // Configure parses and initializes the config.
-func (d *Destination) Configure(ctx context.Context, cfg map[string]string) error {
+func (d *Destination) Configure(_ context.Context, cfg map[string]string) error {
 	configuration, err := Parse(cfg)
 	if err != nil {
 		return err
 	}
 
 	d.cfg = configuration
+
 	return nil
 }
 
-// Open http client
-func (d *Destination) Open(ctx context.Context) error {
-	d.buffer = make([]sdk.Record, 0, d.cfg.BufferSize)
-	d.ackFuncCache = make([]sdk.AckFunc, 0, d.cfg.BufferSize)
+// Open initializes a http client.
+func (d *Destination) Open(_ context.Context) error {
 	d.writer = zendesk.NewBulkImporter(d.cfg.UserName, d.cfg.APIToken, d.cfg.Domain, d.cfg.MaxRetries)
+
 	return nil
 }
 
-// WriteAsync writes a record into a Destination. Destination maintains an in-memory
-// buffer and doesn't actually perform any write until the buffer has enough
-// records in it. The buffer size can be configured using `bufferSize` config.
-func (d *Destination) WriteAsync(ctx context.Context, r sdk.Record, ackFunc sdk.AckFunc) error {
-	// If either Destination or Writer have encountered an error, there's no point in
-	// accepting more records. We better signal the error up the stack and force
-	// the server to maybe re-instantiate plugin or do something else about it.
-	if d.err != nil {
-		return d.err
-	}
-
-	d.mux.Lock()
-	defer d.mux.Unlock()
-
-	d.buffer = append(d.buffer, r)
-	d.ackFuncCache = append(d.ackFuncCache, ackFunc)
-
-	if len(d.buffer) >= int(d.cfg.BufferSize) {
-		if err := d.Flush(ctx); err != nil {
-			return err
-		}
-	}
-	return d.err
-}
-
-func (d *Destination) Flush(ctx context.Context) error {
-	bufferedRecords := d.buffer
-	d.buffer = d.buffer[:0]
-
-	err := d.writer.Write(ctx, bufferedRecords)
+// Write writes records into a Destination.
+func (d *Destination) Write(ctx context.Context, records []sdk.Record) (int, error) {
+	err := d.writer.Write(ctx, records)
 	if err != nil {
-		d.err = err
-		return err
+		return 0, err
 	}
 
-	// call all the written records' ackFunctions
-	for _, ack := range d.ackFuncCache {
-		err := ack(d.err)
-		if err != nil {
-			return err
-		}
-	}
-	d.ackFuncCache = d.ackFuncCache[:0]
-	return nil
+	return len(records), nil
 }
 
-// Teardown will flush all the records from buffer to zendesk and set the writer to nil
-func (d *Destination) Teardown(ctx context.Context) error {
-	defer func() {
-		d.writer = nil
-	}()
+// Teardown closes any connections which were previously connected from previous requests.
+func (d *Destination) Teardown(_ context.Context) error {
 	if d.writer != nil {
-		d.mux.Lock()
-		defer d.mux.Unlock()
-		return d.Flush(ctx)
+		d.writer.Close()
 	}
+
 	return nil
 }

@@ -1,18 +1,17 @@
-/*
-Copyright © 2022 Meroxa, Inc. & Gophers Lab Technologies Pvt. Ltd.
+// Copyright © 2022 Meroxa, Inc. & Gophers Lab Technologies Pvt. Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package zendesk
 
 import (
@@ -26,6 +25,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/conduitio-labs/conduit-connector-zendesk/source/position"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,11 +40,14 @@ func TestCursor_FetchRecords(t *testing.T) {
 	}
 	testServer := httptest.NewServer(th)
 	cursor := &Cursor{
-		userName:         th.username,
-		apiToken:         th.apiToken,
-		client:           &http.Client{},
-		baseURL:          testServer.URL,
-		lastModifiedTime: time.Unix(0, 0),
+		userName: th.username,
+		apiToken: th.apiToken,
+		client:   &http.Client{},
+		baseURL:  testServer.URL,
+		tp: &position.TicketPosition{
+			Mode:         position.ModeSnapshot,
+			LastModified: time.Unix(0, 0),
+		},
 	}
 	ctx := context.Background()
 	recs, err := cursor.FetchRecords(ctx)
@@ -76,12 +79,15 @@ func TestCursor_FetchRecords_429(t *testing.T) {
 	}
 	testServer := httptest.NewServer(th)
 	cursor := &Cursor{
-		userName:         th.username,
-		apiToken:         th.apiToken,
-		client:           &http.Client{},
-		baseURL:          testServer.URL,
-		lastModifiedTime: time.Unix(0, 0),
-		afterURL:         fmt.Sprintf("%s/api/v2/incremental/tickets/cursor.json?cursor=some_dummy", testServer.URL),
+		userName: th.username,
+		apiToken: th.apiToken,
+		client:   &http.Client{},
+		baseURL:  testServer.URL,
+		tp: &position.TicketPosition{
+			Mode:         position.ModeSnapshot,
+			LastModified: time.Unix(0, 0),
+		},
+		afterURL: fmt.Sprintf("%s/api/v2/incremental/tickets/cursor.json?cursor=some_dummy", testServer.URL),
 	}
 	ctx := context.Background()
 	recs, err := cursor.FetchRecords(ctx)
@@ -101,12 +107,15 @@ func TestCursor_FetchRecords_500(t *testing.T) {
 	}
 	testServer := httptest.NewServer(th)
 	cursor := &Cursor{
-		userName:         th.username,
-		apiToken:         th.apiToken,
-		client:           &http.Client{},
-		baseURL:          testServer.URL,
-		lastModifiedTime: time.Unix(0, 0),
-		afterURL:         fmt.Sprintf("%s/api/v2/incremental/tickets/cursor.json?cursor=some_dummy", testServer.URL),
+		userName: th.username,
+		apiToken: th.apiToken,
+		client:   &http.Client{},
+		baseURL:  testServer.URL,
+		tp: &position.TicketPosition{
+			Mode:         position.ModeSnapshot,
+			LastModified: time.Unix(0, 0),
+		},
+		afterURL: fmt.Sprintf("%s/api/v2/incremental/tickets/cursor.json?cursor=some_dummy", testServer.URL),
 	}
 	ctx := context.Background()
 	recs, err := cursor.FetchRecords(ctx)
