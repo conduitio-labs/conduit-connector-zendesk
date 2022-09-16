@@ -58,9 +58,11 @@ Sample Record:
     "id": 12345
   },
   "metadata": null,
-  "created_at": "2006-01-02T15:04:05Z07:00",
   "key": "12345",
-  "payload": "<ticket json received from zendesk>"
+  "payload": {
+       "before" : null,
+       "after" : "<ticket json received from zendesk>"
+  }
 }
 ```
 
@@ -84,7 +86,7 @@ Sample Record:
 
 ## Destination Connector
 The destination connector receives the records from the conduit as individual record object and store it to the buffer as an array of records.
-Once the maxBufferSize is reached it will push the tickets to zendesk using [bulk import api](https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_import/#ticket-bulk-import).
+Then it will push the tickets to zendesk using [bulk import api](https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_import/#ticket-bulk-import).
 Configuration for zendesk destination api includes `zendesk.domain`, `zendesk.userName`,`zendesk.apiToken`. Once the zendesk client is initialized, it will wait for the buffer to be filled, before writing the data to zendesk destination account.
 
 *The connector can accept both structured payloads and raw payloads(JSON bytes).*
@@ -111,9 +113,6 @@ In case the rate limit is exceeded, i.e 429 error is received from zendesk, conn
 | `bufferSize`       | bufferSize stores the ticket objects as array                      | false    | 100     |
 | `maxRetries`       | max API retry attempts, in case of rate-limit exceeded error(429)  | false    | 3       |
 
-### WriteAsync
-The source input from server will be written in the `buffer`, size of the buffer is specified in the configuration. Once the buffer is full it writes the record to zendesk using [bulk import api](https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_import/#ticket-bulk-import) `create_many`. Each object from records array is unmarshalled into Ticket type struct and appended to `CreateManyRequest`.
-When the `Teardown` is called, i.e pipeline is paused or gracefully shutting down, the data in buffer is flushed (written to zendesk), irrespective the number of records in the buffer.
 
 # Limitations
 - Max 100 tickets that can be written in one API call to zendesk
