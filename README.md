@@ -57,8 +57,10 @@ Sample Record:
     "last_modified_time": "2006-01-02T15:04:05Z07:00",
     "id": 12345
   },
-  "metadata": null,
-  "key": "12345",
+  "metadata": {
+    "opencdc.createdAt": "<time.Now>"
+  },
+  "key": "<ticket id>",
   "payload": {
        "before" : null,
        "after" : "<ticket json received from zendesk>"
