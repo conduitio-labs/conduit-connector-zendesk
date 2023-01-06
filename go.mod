@@ -3,7 +3,7 @@ module github.com/conduitio-labs/conduit-connector-zendesk
 go 1.18
 
 require (
-	github.com/conduitio/conduit-connector-sdk v0.4.0
+	github.com/conduitio/conduit-connector-sdk v0.4.2
 	github.com/stretchr/testify v1.8.1
 	go.uber.org/goleak v1.2.0
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637
