@@ -21,7 +21,6 @@ import (
 	"github.com/conduitio-labs/conduit-connector-zendesk/config"
 	"github.com/conduitio-labs/conduit-connector-zendesk/source/iterator"
 	"github.com/conduitio-labs/conduit-connector-zendesk/source/position"
-
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
@@ -69,7 +68,7 @@ func (s *Source) Parameters() map[string]sdk.Parameter {
 }
 
 // Configure parses zendesk config
-func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
+func (s *Source) Configure(_ context.Context, cfg map[string]string) error {
 	zendeskConfig, err := Parse(cfg)
 	if err != nil {
 		return err
