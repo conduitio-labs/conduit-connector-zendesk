@@ -58,6 +58,7 @@ func TestNewCDCIterator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
 			res, err := NewCDCIterator(context.Background(), tt.username, tt.apiToken, tt.domain, tt.pollingPeriod, &tt.tp)
 			if tt.isError {
 				assert.NotNil(t, err)
