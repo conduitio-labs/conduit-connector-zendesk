@@ -1,8 +1,6 @@
 module github.com/conduitio-labs/conduit-connector-zendesk
 
-go 1.21
-
-toolchain go1.21.1
+go 1.22.4
 
 require (
 	github.com/conduitio/conduit-connector-sdk v0.8.0
