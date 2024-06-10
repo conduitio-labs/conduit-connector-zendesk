@@ -143,7 +143,7 @@ func TestHasNext(t *testing.T) {
 		response:      true,
 	}, {
 		name: "no record in buffer",
-		fn: func(t *testing.T, c *CDCIterator, mc *mocks.ZendeskCursor) {
+		fn: func(_ *testing.T, c *CDCIterator, mc *mocks.ZendeskCursor) {
 			c.mux.Lock()
 			defer c.mux.Unlock()
 			mc.On("FetchRecords", mock.Anything).Return([]sdk.Record{}, nil)
@@ -152,7 +152,7 @@ func TestHasNext(t *testing.T) {
 		pollingPeriod: time.Millisecond,
 	}, {
 		name: "record in buffer, iterator stopped",
-		fn: func(t *testing.T, c *CDCIterator, mc *mocks.ZendeskCursor) {
+		fn: func(_ *testing.T, c *CDCIterator, mc *mocks.ZendeskCursor) {
 			mc.On("Close")
 			// directly set record in buffer, to mock this scenario
 			c.buffer <- sdk.Record{}

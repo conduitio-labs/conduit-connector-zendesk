@@ -98,8 +98,7 @@ func TestAcceptance(t *testing.T) {
 				Connector:         Connector,
 				SourceConfig:      sourceConfig,
 				DestinationConfig: destConfig,
-				BeforeTest: func(t *testing.T) {
-				},
+				BeforeTest:        func(*testing.T) {},
 				GoleakOptions: []goleak.Option{
 					goleak.IgnoreCurrent(),
 					goleak.IgnoreTopFunction("internal/poll.runtime_pollWait"),
