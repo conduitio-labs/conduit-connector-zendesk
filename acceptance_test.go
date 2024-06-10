@@ -98,8 +98,7 @@ func TestAcceptance(t *testing.T) {
 				Connector:         Connector,
 				SourceConfig:      sourceConfig,
 				DestinationConfig: destConfig,
-				BeforeTest: func(t *testing.T) {
-				},
+				BeforeTest:        func(*testing.T) {},
 				GoleakOptions: []goleak.Option{
 					goleak.IgnoreCurrent(),
 					goleak.IgnoreTopFunction("internal/poll.runtime_pollWait"),
@@ -145,7 +144,7 @@ type AcceptanceTestDriver struct {
 	sdk.ConfigurableAcceptanceTestDriver
 }
 
-func (d AcceptanceTestDriver) GenerateRecord(t *testing.T, operation sdk.Operation) sdk.Record {
+func (d AcceptanceTestDriver) GenerateRecord(_ *testing.T, _ sdk.Operation) sdk.Record {
 	payload := fmt.Sprintf(`{"description":"%s","subject":"%s","raw_subject":"%s"}`, d.randString(32), d.randString(32), d.randString(32))
 	return sdk.Record{
 		Position: sdk.Position(fmt.Sprintf(`{last_modified_time:%v,id:"%v",}`, time.Now().Add(1*time.Second), 0)),
