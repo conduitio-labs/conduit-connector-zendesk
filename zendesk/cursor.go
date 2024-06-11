@@ -19,7 +19,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -97,7 +97,7 @@ func (c *Cursor) FetchRecords(ctx context.Context) ([]sdk.Record, error) {
 		return nil, fmt.Errorf("non 200 status code received(%v)", resp.StatusCode)
 	}
 
-	ticketList, err := ioutil.ReadAll(resp.Body)
+	ticketList, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error reading the response body: %w", err)
 	}

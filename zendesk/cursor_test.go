@@ -18,7 +18,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -138,7 +138,7 @@ func (t *testHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	assert.Equal(t.t, t.url.Path, r.URL.Path)
 	assert.Equal(t.t, t.url.RawQuery, r.URL.RawQuery)
 
-	bodyBytes, err := ioutil.ReadAll(r.Body)
+	bodyBytes, err := io.ReadAll(r.Body)
 	assert.NoError(t.t, err)
 
 	if len(t.wantBody) > 0 {
