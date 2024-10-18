@@ -21,8 +21,7 @@ import (
 
 	"github.com/conduitio-labs/conduit-connector-zendesk/source/iterator/mocks"
 	"github.com/conduitio-labs/conduit-connector-zendesk/source/position"
-	sdk "github.com/conduitio/conduit-connector-sdk"
-
+	"github.com/conduitio/conduit-commons/opencdc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -84,10 +83,10 @@ func TestFlush(t *testing.T) {
 
 	dummyPosition, err := (&position.TicketPosition{LastModified: time.Now(), ID: 1234}).ToRecordPosition()
 	assert.NoError(t, err)
-	in := sdk.Record{Position: dummyPosition}
+	in := opencdc.Record{Position: dummyPosition}
 
 	mockCursor := new(mocks.ZendeskCursor)
-	mockCursor.On("FetchRecords", mock.Anything).Once().Return([]sdk.Record{in}, nil)
+	mockCursor.On("FetchRecords", mock.Anything).Once().Return([]opencdc.Record{in}, nil)
 	mockCursor.On("Close")
 
 	cdc := newTestCDCIterator(ctx, t, 500*time.Millisecond, mockCursor) // half of timeout time
@@ -106,10 +105,10 @@ func TestNext(t *testing.T) {
 
 	dummyPosition, err := (&position.TicketPosition{LastModified: time.Now(), ID: 1234}).ToRecordPosition()
 	assert.NoError(t, err)
-	in := sdk.Record{Position: dummyPosition}
+	in := opencdc.Record{Position: dummyPosition}
 
 	mockCursor := new(mocks.ZendeskCursor)
-	mockCursor.On("FetchRecords", mock.Anything).Once().Return([]sdk.Record{in}, nil)
+	mockCursor.On("FetchRecords", mock.Anything).Once().Return([]opencdc.Record{in}, nil)
 
 	cdc := newTestCDCIterator(ctx, t, 500*time.Millisecond, mockCursor) // half of timeout
 
@@ -136,8 +135,8 @@ func TestHasNext(t *testing.T) {
 			defer c.mux.Unlock()
 			dummyPosition, err := (&position.TicketPosition{LastModified: time.Now(), ID: 1234}).ToRecordPosition()
 			assert.NoError(t, err)
-			in := sdk.Record{Position: dummyPosition}
-			mc.On("FetchRecords", mock.Anything).Return([]sdk.Record{in}, nil)
+			in := opencdc.Record{Position: dummyPosition}
+			mc.On("FetchRecords", mock.Anything).Return([]opencdc.Record{in}, nil)
 		},
 		pollingPeriod: time.Millisecond,
 		response:      true,
@@ -146,7 +145,7 @@ func TestHasNext(t *testing.T) {
 		fn: func(_ *testing.T, c *CDCIterator, mc *mocks.ZendeskCursor) {
 			c.mux.Lock()
 			defer c.mux.Unlock()
-			mc.On("FetchRecords", mock.Anything).Return([]sdk.Record{}, nil)
+			mc.On("FetchRecords", mock.Anything).Return([]opencdc.Record{}, nil)
 		},
 		response:      false,
 		pollingPeriod: time.Millisecond,
@@ -155,7 +154,7 @@ func TestHasNext(t *testing.T) {
 		fn: func(_ *testing.T, c *CDCIterator, mc *mocks.ZendeskCursor) {
 			mc.On("Close")
 			// directly set record in buffer, to mock this scenario
-			c.buffer <- sdk.Record{}
+			c.buffer <- opencdc.Record{}
 			c.Stop()
 		},
 		pollingPeriod: time.Millisecond,

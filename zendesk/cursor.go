@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/conduitio-labs/conduit-connector-zendesk/source/position"
-
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
@@ -56,7 +56,7 @@ func NewCursor(userName, apiToken, domain string, tp *position.TicketPosition) *
 }
 
 // FetchRecords will export tickets from zendesk api, initial start_time is set to 0
-func (c *Cursor) FetchRecords(ctx context.Context) ([]sdk.Record, error) {
+func (c *Cursor) FetchRecords(ctx context.Context) ([]opencdc.Record, error) {
 	if c.nextRun.After(time.Now()) {
 		return nil, nil
 	}
@@ -131,9 +131,9 @@ func (c *Cursor) Close() {
 	}
 }
 
-// convert received ticket list to sdk.Record
-func (c *Cursor) toRecords(tickets []map[string]interface{}) ([]sdk.Record, error) {
-	records := make([]sdk.Record, 0, len(tickets))
+// convert received ticket list to opencdc.Record
+func (c *Cursor) toRecords(tickets []map[string]interface{}) ([]opencdc.Record, error) {
+	records := make([]opencdc.Record, 0, len(tickets))
 	lastValidModifiedTime := c.tp.LastModified
 
 	for _, ticket := range tickets {
@@ -181,15 +181,15 @@ func (c *Cursor) toRecords(tickets []map[string]interface{}) ([]sdk.Record, erro
 			return nil, err
 		}
 
-		metadata := sdk.Metadata{}
+		metadata := opencdc.Metadata{}
 		metadata.SetCreatedAt(createdAt)
 
 		if c.tp.Mode == position.ModeSnapshot {
 			records = append(records, sdk.Util.Source.NewRecordSnapshot(
 				toRecordPosition,
 				metadata,
-				sdk.RawData(fmt.Sprintf("%v", id)),
-				sdk.RawData(payload),
+				opencdc.RawData(fmt.Sprintf("%v", id)),
+				opencdc.RawData(payload),
 			))
 
 			continue
@@ -200,22 +200,23 @@ func (c *Cursor) toRecords(tickets []map[string]interface{}) ([]sdk.Record, erro
 			records = append(records, sdk.Util.Source.NewRecordCreate(
 				toRecordPosition,
 				metadata,
-				sdk.RawData(fmt.Sprintf("%v", id)),
-				sdk.RawData(payload),
+				opencdc.RawData(fmt.Sprintf("%v", id)),
+				opencdc.RawData(payload),
 			))
 		case "deleted":
 			records = append(records, sdk.Util.Source.NewRecordDelete(
 				toRecordPosition,
 				metadata,
-				sdk.RawData(fmt.Sprintf("%v", id)),
+				opencdc.RawData(fmt.Sprintf("%v", id)),
+				nil,
 			))
 		default:
 			records = append(records, sdk.Util.Source.NewRecordUpdate(
 				toRecordPosition,
 				metadata,
-				sdk.RawData(fmt.Sprintf("%v", id)),
+				opencdc.RawData(fmt.Sprintf("%v", id)),
 				nil,
-				sdk.RawData(payload),
+				opencdc.RawData(payload),
 			))
 		}
 	}

@@ -21,6 +21,8 @@ import (
 	"github.com/conduitio-labs/conduit-connector-zendesk/config"
 	"github.com/conduitio-labs/conduit-connector-zendesk/source/iterator"
 	"github.com/conduitio-labs/conduit-connector-zendesk/source/position"
+	cconfig "github.com/conduitio/conduit-commons/config"
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
@@ -32,7 +34,7 @@ type Source struct {
 
 type Iterator interface {
 	HasNext(ctx context.Context) bool
-	Next(ctx context.Context) (sdk.Record, error)
+	Next(ctx context.Context) (opencdc.Record, error)
 	Stop()
 }
 
@@ -42,33 +44,32 @@ func NewSource() sdk.Source {
 }
 
 // Parameters returns a map of named Parameters that describe how to configure the Source.
-func (s *Source) Parameters() map[string]sdk.Parameter {
-	return map[string]sdk.Parameter{
+func (s *Source) Parameters() cconfig.Parameters {
+	return map[string]cconfig.Parameter{
 		config.KeyDomain: {
 			Default:     "",
-			Required:    true,
 			Description: "A domain is referred as the organization name to which zendesk is registered",
+			Validations: []cconfig.Validation{cconfig.ValidationRequired{}},
 		},
 		config.KeyUserName: {
 			Default:     "",
-			Required:    true,
 			Description: "Login to zendesk performed using username",
+			Validations: []cconfig.Validation{cconfig.ValidationRequired{}},
 		},
 		config.KeyAPIToken: {
 			Default:     "",
-			Required:    true,
 			Description: "password to login",
+			Validations: []cconfig.Validation{cconfig.ValidationRequired{}},
 		},
 		KeyPollingPeriod: {
 			Default:     "6s",
-			Required:    false,
 			Description: "Fetch interval for consecutive iterations",
 		},
 	}
 }
 
 // Configure parses zendesk config
-func (s *Source) Configure(_ context.Context, cfg map[string]string) error {
+func (s *Source) Configure(_ context.Context, cfg cconfig.Config) error {
 	zendeskConfig, err := Parse(cfg)
 	if err != nil {
 		return err
@@ -78,7 +79,7 @@ func (s *Source) Configure(_ context.Context, cfg map[string]string) error {
 }
 
 // Open prepare the plugin to start sending records from the given position
-func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
+func (s *Source) Open(ctx context.Context, rp opencdc.Position) error {
 	ticketPos, err := position.ParsePosition(rp)
 	if err != nil {
 		return err
@@ -99,14 +100,14 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 }
 
 // Read gets the next object from the zendesk api
-func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
+func (s *Source) Read(ctx context.Context) (opencdc.Record, error) {
 	if !s.iterator.HasNext(ctx) {
-		return sdk.Record{}, sdk.ErrBackoffRetry
+		return opencdc.Record{}, sdk.ErrBackoffRetry
 	}
 
 	r, err := s.iterator.Next(ctx)
 	if err != nil {
-		return sdk.Record{}, err
+		return opencdc.Record{}, err
 	}
 	return r, nil
 }
@@ -120,7 +121,7 @@ func (s *Source) Teardown(ctx context.Context) error {
 	return nil
 }
 
-func (s *Source) Ack(ctx context.Context, pos sdk.Position) error {
+func (s *Source) Ack(ctx context.Context, pos opencdc.Position) error {
 	ticketPos, err := position.ParsePosition(pos)
 	if err != nil {
 		return fmt.Errorf("invalid position: %w", err)

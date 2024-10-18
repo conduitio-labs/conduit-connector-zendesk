@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 )
 
 // Mode defines an iterator mode.
@@ -38,17 +38,17 @@ type TicketPosition struct {
 }
 
 // ToRecordPosition will extract the after_url from the ticket result json
-func (pos *TicketPosition) ToRecordPosition() (sdk.Position, error) {
+func (pos *TicketPosition) ToRecordPosition() (opencdc.Position, error) {
 	res, err := json.Marshal(pos)
 	if err != nil {
-		return sdk.Position{}, fmt.Errorf("error in parsing the position %w", err)
+		return opencdc.Position{}, fmt.Errorf("error in parsing the position %w", err)
 	}
 
 	return res, nil
 }
 
 // ParsePosition will unmarshal the TicketPosition used to record the next position
-func ParsePosition(p sdk.Position) (*TicketPosition, error) {
+func ParsePosition(p opencdc.Position) (*TicketPosition, error) {
 	var err error
 
 	if p == nil {
@@ -56,7 +56,7 @@ func ParsePosition(p sdk.Position) (*TicketPosition, error) {
 	}
 
 	var tp TicketPosition
-	// parse the next position to sdk.Record
+	// parse the next position to opencdc.Record
 	err = json.Unmarshal(p, &tp)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't parse the after_cursor position: %w", err)
