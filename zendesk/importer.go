@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
@@ -54,7 +55,7 @@ func NewBulkImporter(userName, apiToken, domain string, maxRetries uint64) *Bulk
 }
 
 // Write buffer data to zendesk
-func (b *BulkImporter) Write(ctx context.Context, records []sdk.Record) error {
+func (b *BulkImporter) Write(ctx context.Context, records []opencdc.Record) error {
 	bufferedTicket, err := parseRecords(records)
 	if err != nil {
 		return fmt.Errorf("unable to parse the records %w", err)
@@ -125,7 +126,7 @@ func (b *BulkImporter) Close() {
 
 // parseRecords unmarshal the payload data from records to map[string]interface{}
 // and returns a marshalled CreateManyRequest, to be used to write multiple tickets to zendesk
-func parseRecords(records []sdk.Record) ([]byte, error) {
+func parseRecords(records []opencdc.Record) ([]byte, error) {
 	output := CreateManyRequest{
 		Tickets: make([]map[string]interface{}, 0, len(records)),
 	}

@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -36,7 +36,7 @@ func TestToRecordPosition(t *testing.T) {
 func TestParsePosition(t *testing.T) {
 	tests := []struct {
 		name    string
-		pos     sdk.Position
+		pos     opencdc.Position
 		want    *TicketPosition
 		isError bool
 	}{

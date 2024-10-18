@@ -30,8 +30,8 @@ import (
 	"github.com/conduitio-labs/conduit-connector-zendesk/source"
 	"github.com/conduitio-labs/conduit-connector-zendesk/source/position"
 	"github.com/conduitio-labs/conduit-connector-zendesk/zendesk"
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
 )
@@ -144,13 +144,13 @@ type AcceptanceTestDriver struct {
 	sdk.ConfigurableAcceptanceTestDriver
 }
 
-func (d AcceptanceTestDriver) GenerateRecord(_ *testing.T, _ sdk.Operation) sdk.Record {
+func (d AcceptanceTestDriver) GenerateRecord(_ *testing.T, _ opencdc.Operation) opencdc.Record {
 	payload := fmt.Sprintf(`{"description":"%s","subject":"%s","raw_subject":"%s"}`, d.randString(32), d.randString(32), d.randString(32))
-	return sdk.Record{
-		Position: sdk.Position(fmt.Sprintf(`{last_modified_time:%v,id:"%v",}`, time.Now().Add(1*time.Second), 0)),
+	return opencdc.Record{
+		Position: opencdc.Position(fmt.Sprintf(`{last_modified_time:%v,id:"%v",}`, time.Now().Add(1*time.Second), 0)),
 		Metadata: nil,
-		Key:      sdk.RawData(fmt.Sprintf("%v", 0)),
-		Payload:  sdk.Change{After: sdk.RawData(payload)},
+		Key:      opencdc.RawData(fmt.Sprintf("%v", 0)),
+		Payload:  opencdc.Change{After: opencdc.RawData(payload)},
 	}
 }
 

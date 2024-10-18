@@ -22,23 +22,23 @@ import (
 
 	"github.com/conduitio-labs/conduit-connector-zendesk/source/position"
 	"github.com/conduitio-labs/conduit-connector-zendesk/zendesk"
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 	"gopkg.in/tomb.v2"
 )
 
 type ZendeskCursor interface {
-	FetchRecords(ctx context.Context) ([]sdk.Record, error)
+	FetchRecords(ctx context.Context) ([]opencdc.Record, error)
 	Close()
 }
 
 //go:generate mockery --name=ZendeskCursor
 
 type CDCIterator struct {
-	lastModifiedTime time.Time         // ticket last updated time
-	tomb             *tomb.Tomb        // new tomb
-	ticker           *time.Ticker      // records time interval for next iteration
-	caches           chan []sdk.Record // cache to store array of tickets
-	buffer           chan sdk.Record   // buffer to store individual ticket object
+	lastModifiedTime time.Time             // ticket last updated time
+	tomb             *tomb.Tomb            // new tomb
+	ticker           *time.Ticker          // records time interval for next iteration
+	caches           chan []opencdc.Record // cache to store array of tickets
+	buffer           chan opencdc.Record   // buffer to store individual ticket object
 	cursor           ZendeskCursor
 	mux              *sync.Mutex // mux to avoid race condition while setting custom cursor
 }
@@ -67,8 +67,8 @@ func NewCDCIterator(
 
 	cdc := &CDCIterator{
 		tomb:             tmbWithCtx,
-		caches:           make(chan []sdk.Record, 1),
-		buffer:           make(chan sdk.Record, 1),
+		caches:           make(chan []opencdc.Record, 1),
+		buffer:           make(chan opencdc.Record, 1),
 		ticker:           time.NewTicker(pollingPeriod),
 		lastModifiedTime: tp.LastModified,
 		cursor:           cursor,
@@ -87,14 +87,14 @@ func (c *CDCIterator) HasNext(_ context.Context) bool {
 }
 
 // Next will check the case whether to push data into buffer
-func (c *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
+func (c *CDCIterator) Next(ctx context.Context) (opencdc.Record, error) {
 	select {
 	case rec := <-c.buffer:
 		return rec, nil
 	case <-c.tomb.Dying():
-		return sdk.Record{}, c.tomb.Err()
+		return opencdc.Record{}, c.tomb.Err()
 	case <-ctx.Done():
-		return sdk.Record{}, ctx.Err()
+		return opencdc.Record{}, ctx.Err()
 	}
 }
 

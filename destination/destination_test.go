@@ -21,7 +21,7 @@ import (
 
 	"github.com/conduitio-labs/conduit-connector-zendesk/config"
 	"github.com/conduitio-labs/conduit-connector-zendesk/destination/mocks"
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -88,7 +88,7 @@ func TestOpen(t *testing.T) {
 func TestWrite(t *testing.T) {
 	tests := []struct {
 		name   string
-		record sdk.Record
+		record opencdc.Record
 		err    error
 		dest   Destination
 	}{
@@ -102,16 +102,16 @@ func TestWrite(t *testing.T) {
 					return w
 				}(),
 			},
-			record: sdk.Record{
-				Key:     sdk.RawData(`dummy_key`),
-				Payload: sdk.Change{After: sdk.RawData(``)},
+			record: opencdc.Record{
+				Key:     opencdc.RawData(`dummy_key`),
+				Payload: opencdc.Change{After: opencdc.RawData(``)},
 			},
 			err: nil,
 		},
 		{
 			name: "valid case",
-			record: sdk.Record{
-				Payload: sdk.Change{After: sdk.RawData(`"dummy_data":"12345"`)},
+			record: opencdc.Record{
+				Payload: opencdc.Change{After: opencdc.RawData(`"dummy_data":"12345"`)},
 			},
 			dest: Destination{
 				writer: func() Writer {
@@ -124,8 +124,8 @@ func TestWrite(t *testing.T) {
 		},
 		{
 			name: "write invalid case with flush error",
-			record: sdk.Record{
-				Payload: sdk.Change{After: sdk.RawData(`"dummy_data":"12345"`)},
+			record: opencdc.Record{
+				Payload: opencdc.Change{After: opencdc.RawData(`"dummy_data":"12345"`)},
 			},
 			dest: Destination{
 				writer: func() Writer {
@@ -141,7 +141,7 @@ func TestWrite(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			n, err := tt.dest.Write(context.Background(), []sdk.Record{tt.record})
+			n, err := tt.dest.Write(context.Background(), []opencdc.Record{tt.record})
 			if tt.err != nil {
 				assert.NotNil(t, err)
 				assert.Equal(t, err, tt.err)

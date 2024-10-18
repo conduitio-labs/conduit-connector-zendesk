@@ -19,11 +19,12 @@ import (
 
 	"github.com/conduitio-labs/conduit-connector-zendesk/config"
 	"github.com/conduitio-labs/conduit-connector-zendesk/zendesk"
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
 type Writer interface {
-	Write(ctx context.Context, records []sdk.Record) error
+	Write(ctx context.Context, records []opencdc.Record) error
 	Close()
 }
 
@@ -41,8 +42,8 @@ func NewDestination() sdk.Destination {
 }
 
 // Parameters returns a map of named Parameters that describe how to configure the Source.
-func (d *Destination) Parameters() map[string]sdk.Parameter {
-	return map[string]sdk.Parameter{
+func (d *Destination) Parameters() config.Parameters {
+	return map[string]config.Parameter{
 		config.KeyDomain: {
 			Default:     "",
 			Required:    true,
@@ -67,7 +68,7 @@ func (d *Destination) Parameters() map[string]sdk.Parameter {
 }
 
 // Configure parses and initializes the config.
-func (d *Destination) Configure(_ context.Context, cfg map[string]string) error {
+func (d *Destination) Configure(_ context.Context, cfg config.Config) error {
 	configuration, err := Parse(cfg)
 	if err != nil {
 		return err
@@ -86,7 +87,7 @@ func (d *Destination) Open(_ context.Context) error {
 }
 
 // Write writes records into a Destination.
-func (d *Destination) Write(ctx context.Context, records []sdk.Record) (int, error) {
+func (d *Destination) Write(ctx context.Context, records []opencdc.Record) (int, error) {
 	err := d.writer.Write(ctx, records)
 	if err != nil {
 		return 0, err

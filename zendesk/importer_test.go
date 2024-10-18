@@ -22,7 +22,7 @@ import (
 	"net/url"
 	"testing"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -88,9 +88,9 @@ func TestWrite_RawDataPayload(t *testing.T) {
 		apiToken: th.apiToken,
 	}
 
-	var inputRecords []sdk.Record
-	inputRecord := sdk.Record{
-		Payload: sdk.Change{After: sdk.RawData(ticketPayload)},
+	var inputRecords []opencdc.Record
+	inputRecord := opencdc.Record{
+		Payload: opencdc.Change{After: opencdc.RawData(ticketPayload)},
 	}
 	inputRecords = append(inputRecords, inputRecord)
 
@@ -118,10 +118,10 @@ func TestWrite_StructuredDataPayload(t *testing.T) {
 		apiToken: th.apiToken,
 	}
 
-	var inputRecords []sdk.Record
-	inputRecord := sdk.Record{
-		Payload: sdk.Change{
-			After: sdk.StructuredData{
+	var inputRecords []opencdc.Record
+	inputRecord := opencdc.Record{
+		Payload: opencdc.Change{
+			After: opencdc.StructuredData{
 				"description": "Some dummy description",
 				"priority":    "normal",
 				"subject":     "Sample ticket: Meet the ticket",
@@ -158,7 +158,7 @@ func TestWrite_429(t *testing.T) {
 		apiToken:   th.apiToken,
 		retryCount: 1,
 	}
-	var inputRecords []sdk.Record
+	var inputRecords []opencdc.Record
 	inputBytes := []byte(`{
 	"description": "Some dummy description",
 	"priority": "normal",
@@ -166,8 +166,8 @@ func TestWrite_429(t *testing.T) {
 	"tags": ["sample", "support", "zendesk"],
 	"type": "incident"
 }`)
-	inputRecord := sdk.Record{
-		Payload: sdk.Change{After: sdk.RawData(inputBytes)},
+	inputRecord := opencdc.Record{
+		Payload: opencdc.Change{After: opencdc.RawData(inputBytes)},
 	}
 	inputRecords = append(inputRecords, inputRecord)
 	ctx := context.Background()
@@ -195,7 +195,7 @@ func TestWrite_500(t *testing.T) {
 		userName: th.username,
 		apiToken: th.apiToken,
 	}
-	var inputRecords []sdk.Record
+	var inputRecords []opencdc.Record
 	inputBytes := []byte(`{
 	"description": "Some dummy description",
 	"priority": "normal",
@@ -203,8 +203,8 @@ func TestWrite_500(t *testing.T) {
 	"tags": ["sample", "support", "zendesk"],
 	"type": "incident"
 }`)
-	inputRecord := sdk.Record{
-		Payload: sdk.Change{After: sdk.RawData(inputBytes)},
+	inputRecord := opencdc.Record{
+		Payload: opencdc.Change{After: opencdc.RawData(inputBytes)},
 	}
 	inputRecords = append(inputRecords, inputRecord)
 

@@ -16,7 +16,6 @@ package main
 
 import (
 	zendesk "github.com/conduitio-labs/conduit-connector-zendesk"
-
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
