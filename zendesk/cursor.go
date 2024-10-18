@@ -208,6 +208,7 @@ func (c *Cursor) toRecords(tickets []map[string]interface{}) ([]opencdc.Record, 
 				toRecordPosition,
 				metadata,
 				opencdc.RawData(fmt.Sprintf("%v", id)),
+				nil,
 			))
 		default:
 			records = append(records, sdk.Util.Source.NewRecordUpdate(

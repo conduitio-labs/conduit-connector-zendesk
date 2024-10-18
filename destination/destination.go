@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:generate mockery --name=Writer
+
 package destination
 
 import (
@@ -19,6 +21,7 @@ import (
 
 	"github.com/conduitio-labs/conduit-connector-zendesk/config"
 	"github.com/conduitio-labs/conduit-connector-zendesk/zendesk"
+	cconfig "github.com/conduitio/conduit-commons/config"
 	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
@@ -27,8 +30,6 @@ type Writer interface {
 	Write(ctx context.Context, records []opencdc.Record) error
 	Close()
 }
-
-//go:generate mockery --name=Writer
 
 type Destination struct {
 	sdk.UnimplementedDestination
@@ -42,33 +43,32 @@ func NewDestination() sdk.Destination {
 }
 
 // Parameters returns a map of named Parameters that describe how to configure the Source.
-func (d *Destination) Parameters() config.Parameters {
-	return map[string]config.Parameter{
+func (d *Destination) Parameters() cconfig.Parameters {
+	return map[string]cconfig.Parameter{
 		config.KeyDomain: {
 			Default:     "",
-			Required:    true,
 			Description: "A domain is referred as the organization name to which zendesk is registered",
+			Validations: []cconfig.Validation{cconfig.ValidationRequired{}},
 		},
 		config.KeyUserName: {
 			Default:     "",
-			Required:    true,
 			Description: "Login to zendesk performed using username",
+			Validations: []cconfig.Validation{cconfig.ValidationRequired{}},
 		},
 		config.KeyAPIToken: {
 			Default:     "",
-			Required:    true,
 			Description: "password to login",
+			Validations: []cconfig.Validation{cconfig.ValidationRequired{}},
 		},
 		KeyMaxRetries: {
 			Default:     "3",
-			Required:    false,
 			Description: "max API retries, before returning an error",
 		},
 	}
 }
 
 // Configure parses and initializes the config.
-func (d *Destination) Configure(_ context.Context, cfg config.Config) error {
+func (d *Destination) Configure(_ context.Context, cfg cconfig.Config) error {
 	configuration, err := Parse(cfg)
 	if err != nil {
 		return err

@@ -21,6 +21,7 @@ import (
 	"github.com/conduitio-labs/conduit-connector-zendesk/config"
 	"github.com/conduitio-labs/conduit-connector-zendesk/source/iterator"
 	"github.com/conduitio-labs/conduit-connector-zendesk/source/position"
+	cconfig "github.com/conduitio/conduit-commons/config"
 	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
@@ -43,33 +44,32 @@ func NewSource() sdk.Source {
 }
 
 // Parameters returns a map of named Parameters that describe how to configure the Source.
-func (s *Source) Parameters() config.Parameters {
-	return map[string]config.Parameter{
+func (s *Source) Parameters() cconfig.Parameters {
+	return map[string]cconfig.Parameter{
 		config.KeyDomain: {
 			Default:     "",
-			Required:    true,
 			Description: "A domain is referred as the organization name to which zendesk is registered",
+			Validations: []cconfig.Validation{cconfig.ValidationRequired{}},
 		},
 		config.KeyUserName: {
 			Default:     "",
-			Required:    true,
 			Description: "Login to zendesk performed using username",
+			Validations: []cconfig.Validation{cconfig.ValidationRequired{}},
 		},
 		config.KeyAPIToken: {
 			Default:     "",
-			Required:    true,
 			Description: "password to login",
+			Validations: []cconfig.Validation{cconfig.ValidationRequired{}},
 		},
 		KeyPollingPeriod: {
 			Default:     "6s",
-			Required:    false,
 			Description: "Fetch interval for consecutive iterations",
 		},
 	}
 }
 
 // Configure parses zendesk config
-func (s *Source) Configure(_ context.Context, cfg config.Config) error {
+func (s *Source) Configure(_ context.Context, cfg cconfig.Config) error {
 	zendeskConfig, err := Parse(cfg)
 	if err != nil {
 		return err
